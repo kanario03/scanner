@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { QRScanner, QRScannerStatus } from '@ionic-native/qr-scanner/ngx';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-folder',
@@ -9,40 +10,69 @@ import { QRScanner, QRScannerStatus } from '@ionic-native/qr-scanner/ngx';
 })
 export class FolderPage implements OnInit {
   public folder: string;
+  scanSubscription;
 
   constructor(
     private activatedRoute: ActivatedRoute,
-    private qrScanner: QRScanner
+    private qrScanner: QRScanner,
+    public toastCtrl: ToastController
   ) {}
 
   ngOnInit() {
     this.folder = this.activatedRoute.snapshot.paramMap.get('id');
+  }
+
+  ionViewWillEnter() {
     this.scan();
+  }
+  ionViewWillLeave() {
+    this.stopScanning();
   }
 
   scan() {
-    // Optionally request the permission early
+    (window.document.querySelector('ion-app') as HTMLElement).classList.add(
+      'cameraView'
+    );
     this.qrScanner
       .prepare()
       .then((status: QRScannerStatus) => {
         if (status.authorized) {
-          // camera permission was granted
-
-          // start scanning
-          let scanSub = this.qrScanner.scan().subscribe((text: string) => {
-            console.log('Scanned something', text);
-
-            this.qrScanner.hide(); // hide camera preview
-            scanSub.unsubscribe(); // stop scanning
-          });
-        } else if (status.denied) {
-          // camera permission was permanently denied
-          // you must use QRScanner.openSettings() method to guide the user to the settings page
-          // then they can grant the permission from there
+          this.qrScanner.show();
+          this.scanSubscription = this.qrScanner
+            .scan()
+            .subscribe(async (text: string) => {
+              let toast = await this.toastCtrl.create({
+                message: `${text}`,
+                position: 'top',
+                duration: 3000,
+                buttons: [
+                  {
+                    text: 'Done',
+                    role: 'cancel',
+                    handler: () => {
+                      console.log('Cancel clicked');
+                    }
+                  }
+                ]
+              });
+              toast.present();
+            });
         } else {
-          // permission was denied, but not permanently. You can ask for permission again at a later time.
+          console.error('Permission Denied', status);
         }
       })
-      .catch((e: any) => console.log('Error is', e));
+      .catch((e: any) => {
+        console.error('Error', e);
+      });
+  }
+
+  stopScanning() {
+    this.scanSubscription ? this.scanSubscription.unsubscribe() : null;
+    this.scanSubscription = null;
+    (window.document.querySelector('ion-app') as HTMLElement).classList.remove(
+      'cameraView'
+    );
+    this.qrScanner.hide();
+    this.qrScanner.destroy();
   }
 }
