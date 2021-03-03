@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">scanner</string>
+    <string name="title_activity_main">scanner</string>
+    <string name="package_name">app.scanner.com</string>
+    <string name="custom_url_scheme">app.scanner.com</string>
+</resources>
