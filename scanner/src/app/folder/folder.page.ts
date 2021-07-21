@@ -41,7 +41,7 @@ export class FolderPage implements OnInit {
           this.scanSubscription = this.qrScanner
             .scan()
             .subscribe(async (text: string) => {
-              let toast = await this.toastCtrl.create({
+              const toast = await this.toastCtrl.create({
                 message: `${text}`,
                 position: 'top',
                 duration: 3000,
@@ -67,6 +67,7 @@ export class FolderPage implements OnInit {
   }
 
   stopScanning() {
+    // tslint:disable-next-line:no-unused-expression
     this.scanSubscription ? this.scanSubscription.unsubscribe() : null;
     this.scanSubscription = null;
     (window.document.querySelector('ion-app') as HTMLElement).classList.remove(
